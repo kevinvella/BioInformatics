@@ -2,10 +2,43 @@ import os
 import urllib.request
 from datetime import datetime, timedelta
 from collections import defaultdict
-from bioservices import UniProt
+#from bioservices import UniProt
+import re
 
-def download_file(url, destination):
-    urllib.request.urlretrieve(url, destination)
+def getProteinForSpecies(baseUrl, species) -> dict:
+    
+    fullUrl = f"{baseUrl}/{species}/"
+    versions = dict()
+
+    # Retrieve file listing from the URL
+    response = urllib.request.urlopen(fullUrl)
+    html = response.read().decode('utf-8')
+
+    regex_pattern = r'^goa_fly\.gaf\.\d+\.gz$'
+
+    # Parse the HTML to extract file names and last modified dates
+    file_lines = html.splitlines()
+    for line in file_lines:
+        if "a href=" in line and ".gaf" in line:
+            file_info = line.split('"')
+            file_name = file_info[7]
+
+            # Check if it's a file (not a directory)
+            if file_name != '../' and re.match(regex_pattern, file_name):
+                last_modifiedString = file_info[10].split('  ')[0]
+                last_modifiedString = last_modifiedString[1:]
+                last_modified = datetime.strptime(last_modifiedString, '%Y-%m-%d %H:%M')
+
+                # Construct the file URL and save path
+                file_url = fullUrl + file_name
+                dictKey = file_name + "_" + last_modified.strftime('%Y%m%d')
+                versions[dictKey] = file_url
+    
+    return versions
+
+def download_file(url, destination, fileName):
+    save_path = os.path.join(destination, fileName)
+    urllib.request.urlretrieve(url, save_path)
 
 def load_annotations(file_path):
     annotations = defaultdict(set)
@@ -31,18 +64,24 @@ def write_target_file(file_path, target_proteins):
             file.write(f'{protein_id}\n')
 
 def create_cafa_benchmark(uniprot_version, species):
-    #uniprotgoa_url = f'https://ftp.ebi.ac.uk/pub/databases/GO/goa/{species}/{uniprot_version}/goa_{species}.gaf.gz'
-    uniprotgoa_url = f'https://ftp.ebi.ac.uk/pub/databases/GO/goa/FLY/goa_fly.gaf.gz'
-    uniprotgoa_file = f'goa_{species}.gaf.gz'
+    baseUrl = 'https://ftp.ebi.ac.uk/pub/databases/GO/goa/old'
+    
+
     #download_file(uniprotgoa_url, uniprotgoa_file)
 
     # Ask the user to select the t-1 version
     print(f'Available versions for {species}:')
-    versions = sorted([d for d in os.listdir() if os.path.isdir(d) and d != uniprot_version], reverse=True)
-    for i, version in enumerate(versions):
-        print(f'{i+1}. {version}')
-    t_minus_1_index = int(input('Enter the index of the t-1 version: ')) - 1
+    versions = getProteinForSpecies(baseUrl= baseUrl, species= species)
+    
+    i = 0
+    for key in versions.keys():
+        print(f"Index {i} - {key}")
+        i = i + 1
+
+    t_minus_1_index = (input('Enter the index of the t-1 version: '))
     t_minus_1_version = versions[t_minus_1_index]
+
+    download_file(t_minus_1_version, './Downloads', t_minus_1_index)
 
     # Ask the user to select the t1 version
     six_months_later = datetime.strptime(t_minus_1_version, '%Y%m') + timedelta(weeks=26)
@@ -89,7 +128,7 @@ def create_cafa_benchmark(uniprot_version, species):
 
 # Ask the user to enter the UniProtGOA version and Fly species
 uniprot_version = input('Enter the UniProtGOA version (e.g., 202105): ')
-species = 'fly'
+species = 'FLY'
 
 # Create CAFA-style benchmark
 create_cafa_benchmark(uniprot_version, species)
