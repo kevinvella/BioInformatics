@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 #from bioservices import UniProt
 import re
+import gzip
 
 def getProteinForSpecies(baseUrl, species) -> dict:
     
@@ -31,14 +32,24 @@ def getProteinForSpecies(baseUrl, species) -> dict:
 
                 # Construct the file URL and save path
                 file_url = fullUrl + file_name
-                dictKey = file_name + "_" + last_modified.strftime('%Y%m%d')
+                dictKey = f"{last_modified.strftime('%Y%m%d')}_{file_name}"
                 versions[dictKey] = file_url
     
-    return versions
+    newVersionDict = dict()
+    for key, value in sorted(versions.items(), reverse=True):
+        newVersionDict[key] = value
+
+    return newVersionDict
 
 def download_file(url, destination, fileName):
     save_path = os.path.join(destination, fileName)
     urllib.request.urlretrieve(url, save_path)
+
+def extract_gz_file(inputFile, outputFile):
+
+    with gzip.open(inputFile, 'rb') as gz_file:
+        with open(outputFile, 'wb') as out_file:
+            out_file.write(gz_file.read())
 
 def load_annotations(file_path):
     annotations = defaultdict(set)
@@ -72,9 +83,8 @@ def create_cafa_benchmark(uniprot_version, species):
     # Ask the user to select the t-1 version
     print(f'Available versions for {species}:')
     versions = getProteinForSpecies(baseUrl= baseUrl, species= species)
-    
     i = 0
-    for key in versions.keys():
+    for key in versions:
         print(f"Index {i} - {key}")
         i = i + 1
 
@@ -82,23 +92,29 @@ def create_cafa_benchmark(uniprot_version, species):
     t_minus_1_version = versions[t_minus_1_index]
 
     download_file(t_minus_1_version, './Downloads', t_minus_1_index)
+    extract_gz_file(inputFile=f'./Downloads/{t_minus_1_index}', outputFile=f'./Downloads/{t_minus_1_index}.txt')
 
     # Ask the user to select the t1 version
-    six_months_later = datetime.strptime(t_minus_1_version, '%Y%m') + timedelta(weeks=26)
-    six_months_later_version = six_months_later.strftime('%Y%m')
-    latest_version = versions[0]
-    t1_version = ''
-    print(f'Recommended t1 version (6 months later): {six_months_later_version}')
-    print(f'Latest version available: {latest_version}')
-    t1_option = input('Enter the t1 version or leave blank for the recommended version: ')
-    if t1_option:
-        t1_version = versions[int(t1_option) - 1]
-        if t1_version < six_months_later_version:
-            print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
+    #six_months_later = datetime.strptime(t_minus_1_version, '%Y%m') + timedelta(weeks=26)
+    #six_months_later_version = six_months_later.strftime('%Y%m')
+
+    latest_version = versions['20230315_goa_fly.gaf.117.gz']
+    t1_version = latest_version
+    #print(f'Recommended t1 version (6 months later): {six_months_later_version}')
+    #print(f'Latest version available: {latest_version}')
+    #t1_option = input('Enter the t1 version or leave blank for the recommended version: ')
+    #if t1_option:
+    #    t1_version = versions[int(t1_option) - 1]
+    #    if t1_version < six_months_later_version:
+    #        print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
+
+    download_file(t1_version, './Downloads', '20230315_goa_fly.gaf.117.gz')
+    extract_gz_file(inputFile=f'./Downloads/20230315_goa_fly.gaf.117.gz', outputFile=f'./Downloads/20230315_goa_fly.gaf.117.gz.txt')
+
 
     # Load annotations for t-1 and t1 versions
-    t_minus_1_annotations = load_annotations(os.path.join(t_minus_1_version, f'goa_{species}.gaf'))
-    t1_annotations = load_annotations(os.path.join(t1_version, f'goa_{species}.gaf'))
+    t_minus_1_annotations = load_annotations(f"./Downloads/20180522_goa_fly.gaf.81.gz.txt")
+    t1_annotations = load_annotations(f"./Downloads/20230315_goa_fly.gaf.117.gz.txt")
 
     # Create No-Knowledge (NK) benchmark file
     nk_benchmark_data = {}
