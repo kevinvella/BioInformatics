@@ -31,9 +31,10 @@ def write_target_file(file_path, target_proteins):
             file.write(f'{protein_id}\n')
 
 def create_cafa_benchmark(uniprot_version, species):
-    uniprotgoa_url = f'https://ftp.ebi.ac.uk/pub/databases/GO/goa/old/{uniprot_version}/goa_{species}.gaf.gz'
+    #uniprotgoa_url = f'https://ftp.ebi.ac.uk/pub/databases/GO/goa/{species}/{uniprot_version}/goa_{species}.gaf.gz'
+    uniprotgoa_url = f'https://ftp.ebi.ac.uk/pub/databases/GO/goa/FLY/goa_fly.gaf.gz'
     uniprotgoa_file = f'goa_{species}.gaf.gz'
-    download_file(uniprotgoa_url, uniprotgoa_file)
+    #download_file(uniprotgoa_url, uniprotgoa_file)
 
     # Ask the user to select the t-1 version
     print(f'Available versions for {species}:')
@@ -70,9 +71,9 @@ def create_cafa_benchmark(uniprot_version, species):
 
     # Create Limited-Knowledge (LK) benchmark file
     lk_benchmark_data = {}
-    for protein_id, go_terms in t1_annotations.items():
-        if protein_id in t_minus_1_annotations and go_terms != t_minus_1_annotations[protein_id]:
-            lk_benchmark_data[protein_id] = go_terms
+    for protein_id, go_terms in t_minus_1_annotations.items():
+        if protein_id in t1_annotations and go_terms != t1_annotations[protein_id]:
+            lk_benchmark_data[protein_id] = t1_annotations[protein_id] - go_terms
     lk_benchmark_file = f'{species}_LK_benchmark.txt'
     write_benchmark_file(lk_benchmark_file, lk_benchmark_data)
 
@@ -81,20 +82,14 @@ def create_cafa_benchmark(uniprot_version, species):
     target_file = f'{species}_target.txt'
     write_target_file(target_file, target_proteins)
 
-    # Retrieve sequence data from UniProt for target proteins
-    uniprot = UniProt(verbose=False)
-    target_sequences = uniprot.retrieve(target_proteins, frmt='fasta')
-    target_fasta_file = f'{species}_target.fasta'
-    with open(target_fasta_file, 'w') as file:
-        file.write(target_sequences)
+    print('Benchmark files created successfully.')
+    print(f'Number of target proteins available for prediction: {len(target_proteins)}')
+    print(f'Number of No-Knowledge (NK) proteins: {len(nk_benchmark_data)}')
+    print(f'Number of Limited-Knowledge (LK) proteins: {len(lk_benchmark_data)}')
 
-    # Provide statistics
-    num_targets = len(target_proteins)
-    num_nk_proteins = len(nk_benchmark_data)
-    num_lk_proteins = len(lk_benchmark_data)
-    print(f'Statistics:\nNumber of targets available for prediction: {num_targets}'
-          f'\nNumber of No-Knowledge proteins: {num_nk_proteins}'
-          f'\nNumber of Limited-Knowledge proteins: {num_lk_proteins}')
+# Ask the user to enter the UniProtGOA version and Fly species
+uniprot_version = input('Enter the UniProtGOA version (e.g., 202105): ')
+species = 'fly'
 
-# Example usage
-create_cafa_benchmark('202105', 'yeast')
+# Create CAFA-style benchmark
+create_cafa_benchmark(uniprot_version, species)
