@@ -2,7 +2,7 @@ import os
 import urllib.request
 from datetime import datetime, timedelta
 from collections import defaultdict
-#from bioservices import UniProt
+from bioservices import UniProt
 import re
 import gzip
 
@@ -70,51 +70,59 @@ def write_benchmark_file(file_path, benchmark_data):
             file.write(f'{protein_id}\t{go_terms_str}\n')
 
 def write_target_file(file_path, target_proteins):
-    with open(file_path, 'w') as file:
-        for protein_id in target_proteins:
-            file.write(f'{protein_id}\n')
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print("Existing file deleted.")
 
-def create_cafa_benchmark(uniprot_version, species):
+    # Retrieve sequence data from UniProt for target proteins
+    uniprot = UniProt(verbose=False)
+    for targetProtein in target_proteins:
+        target_sequences = uniprot.retrieve(targetProtein, frmt='fasta')
+        with open(file_path, 'a') as file:
+            file.write(target_sequences)
+
+def create_cafa_benchmark(species):
     baseUrl = 'https://ftp.ebi.ac.uk/pub/databases/GO/goa/old'
-    
-
-    #download_file(uniprotgoa_url, uniprotgoa_file)
 
     # Ask the user to select the t-1 version
     print(f'Available versions for {species}:')
-    versions = getProteinForSpecies(baseUrl= baseUrl, species= species)
-    i = 0
-    for key in versions:
-        print(f"Index {i} - {key}")
-        i = i + 1
+    versionsDict = getProteinForSpecies(baseUrl= baseUrl, species= species)
+    versionsList = list(versionsDict.keys())
+    for index, key in enumerate(versionsList):
+        print(f"Index {index} - {key}")
 
-    t_minus_1_index = (input('Enter the index of the t-1 version: '))
-    t_minus_1_version = versions[t_minus_1_index]
+    t_minus_1_index = int(input('Enter the index of the t-1 version: '))
+    t_minus_1_version_Url = versionsDict[versionsList[t_minus_1_index]]
+    t_minus_1_version_FileName = versionsList[t_minus_1_index]
 
-    download_file(t_minus_1_version, './Downloads', t_minus_1_index)
-    extract_gz_file(inputFile=f'./Downloads/{t_minus_1_index}', outputFile=f'./Downloads/{t_minus_1_index}.txt')
+    download_file(t_minus_1_version_Url, './Downloads', t_minus_1_version_FileName)
+    extract_gz_file(inputFile=f'./Downloads/{t_minus_1_version_FileName}', outputFile=f'./Downloads/{t_minus_1_version_FileName}.txt')
 
     # Ask the user to select the t1 version
-    #six_months_later = datetime.strptime(t_minus_1_version, '%Y%m') + timedelta(weeks=26)
-    #six_months_later_version = six_months_later.strftime('%Y%m')
+    #Get the date of t-1 from filename
+    t_minus_1_date = datetime.strptime(t_minus_1_version_FileName.split("_")[0], '%Y%m%d')
+    six_months_later = t_minus_1_date + timedelta(weeks=26)
+    six_months_later_version = six_months_later.strftime('%Y%m')
 
-    latest_version = versions['20230315_goa_fly.gaf.117.gz']
-    t1_version = latest_version
-    #print(f'Recommended t1 version (6 months later): {six_months_later_version}')
-    #print(f'Latest version available: {latest_version}')
-    #t1_option = input('Enter the t1 version or leave blank for the recommended version: ')
-    #if t1_option:
-    #    t1_version = versions[int(t1_option) - 1]
-    #    if t1_version < six_months_later_version:
-    #        print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
+    t1_version_Url = versionsDict[versionsList[0]]
+    t1_version_FileName = versionsList[0]
+    print(f'Recommended t1 version (6 months later): {six_months_later_version}')
+    print(f'Latest version available: {versionsList[0]}')
+    t1_option = input('Enter the t1 version or leave blank for the recommended version: ')
+    if t1_option:
+        t1_version = versionsList[int(t1_option)]
+        t1_version_Url = versionsDict[t1_version]
+        t1_version_FileName = t1_version
+        if t1_version < six_months_later_version:
+            print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
 
-    download_file(t1_version, './Downloads', '20230315_goa_fly.gaf.117.gz')
-    extract_gz_file(inputFile=f'./Downloads/20230315_goa_fly.gaf.117.gz', outputFile=f'./Downloads/20230315_goa_fly.gaf.117.gz.txt')
+    download_file(t1_version_Url, './Downloads', t1_version_FileName)
+    extract_gz_file(inputFile=f'./Downloads/{t1_version_FileName}', outputFile=f'./Downloads/{t1_version_FileName}.txt')
 
 
     # Load annotations for t-1 and t1 versions
-    t_minus_1_annotations = load_annotations(f"./Downloads/20180522_goa_fly.gaf.81.gz.txt")
-    t1_annotations = load_annotations(f"./Downloads/20230315_goa_fly.gaf.117.gz.txt")
+    t_minus_1_annotations = load_annotations(f"./Downloads/{t_minus_1_version_FileName}.txt")
+    t1_annotations = load_annotations(f"./Downloads/{t1_version_FileName}.txt")
 
     # Create No-Knowledge (NK) benchmark file
     nk_benchmark_data = {}
@@ -134,7 +142,7 @@ def create_cafa_benchmark(uniprot_version, species):
 
     # Create target file
     target_proteins = set(nk_benchmark_data.keys()) | set(lk_benchmark_data.keys())
-    target_file = f'{species}_target.txt'
+    target_file = f'{species}_target.fasta'
     write_target_file(target_file, target_proteins)
 
     print('Benchmark files created successfully.')
@@ -143,8 +151,12 @@ def create_cafa_benchmark(uniprot_version, species):
     print(f'Number of Limited-Knowledge (LK) proteins: {len(lk_benchmark_data)}')
 
 # Ask the user to enter the UniProtGOA version and Fly species
-uniprot_version = input('Enter the UniProtGOA version (e.g., 202105): ')
 species = 'FLY'
+speciesInput = input('Enter the Species to use (Leave empty for default - FLY): ')
+if speciesInput:
+    species = speciesInput
+
+print(f'Species selected: {species}')
 
 # Create CAFA-style benchmark
-create_cafa_benchmark(uniprot_version, species)
+create_cafa_benchmark(species)
