@@ -41,17 +41,17 @@ def getProteinForSpecies(baseUrl, species) -> dict:
 
     return newVersionDict
 
-def download_file(url, destination, fileName):
+def downloadFile(url, destination, fileName):
     save_path = os.path.join(destination, fileName)
     urllib.request.urlretrieve(url, save_path)
 
-def extract_gz_file(inputFile, outputFile):
+def extractGZFile(inputFile, outputFile):
 
     with gzip.open(inputFile, 'rb') as gz_file:
         with open(outputFile, 'wb') as out_file:
             out_file.write(gz_file.read())
 
-def load_annotations(file_path):
+def loadAnnotations(file_path): 
     annotations = defaultdict(set)
     with open(file_path, 'r') as file:
         for line in file:
@@ -63,13 +63,13 @@ def load_annotations(file_path):
             annotations[protein_id].add(go_id)
     return annotations
 
-def write_benchmark_file(file_path, benchmark_data):
+def writeBenchmarkFile(file_path, benchmark_data):
     with open(file_path, 'w') as file:
         for protein_id, go_terms in benchmark_data.items():
             go_terms_str = '\t'.join(go_terms)
             file.write(f'{protein_id}\t{go_terms_str}\n')
 
-def write_target_file(file_path, target_proteins):
+def writeTargetFile(file_path, target_proteins):
     if os.path.exists(file_path):
         os.remove(file_path)
         print("Existing file deleted.")
@@ -81,7 +81,7 @@ def write_target_file(file_path, target_proteins):
         with open(file_path, 'a') as file:
             file.write(target_sequences)
 
-def create_cafa_benchmark(species):
+def createCafaBenchmark(species):
     baseUrl = 'https://ftp.ebi.ac.uk/pub/databases/GO/goa/old'
 
     # Ask the user to select the t-1 version
@@ -95,8 +95,8 @@ def create_cafa_benchmark(species):
     t_minus_1_version_Url = versionsDict[versionsList[t_minus_1_index]]
     t_minus_1_version_FileName = versionsList[t_minus_1_index]
 
-    download_file(t_minus_1_version_Url, './Downloads', t_minus_1_version_FileName)
-    extract_gz_file(inputFile=f'./Downloads/{t_minus_1_version_FileName}', outputFile=f'./Downloads/{t_minus_1_version_FileName}.txt')
+    downloadFile(t_minus_1_version_Url, './Downloads', t_minus_1_version_FileName)
+    extractGZFile(inputFile=f'./Downloads/{t_minus_1_version_FileName}', outputFile=f'./Downloads/{t_minus_1_version_FileName}.txt')
 
     # Ask the user to select the t1 version
     #Get the date of t-1 from filename
@@ -116,13 +116,13 @@ def create_cafa_benchmark(species):
         if t1_version < six_months_later_version:
             print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
 
-    download_file(t1_version_Url, './Downloads', t1_version_FileName)
-    extract_gz_file(inputFile=f'./Downloads/{t1_version_FileName}', outputFile=f'./Downloads/{t1_version_FileName}.txt')
+    downloadFile(t1_version_Url, './Downloads', t1_version_FileName)
+    extractGZFile(inputFile=f'./Downloads/{t1_version_FileName}', outputFile=f'./Downloads/{t1_version_FileName}.txt')
 
 
     # Load annotations for t-1 and t1 versions
-    t_minus_1_annotations = load_annotations(f"./Downloads/{t_minus_1_version_FileName}.txt")
-    t1_annotations = load_annotations(f"./Downloads/{t1_version_FileName}.txt")
+    t_minus_1_annotations = loadAnnotations(f"./Downloads/{t_minus_1_version_FileName}.txt")
+    t1_annotations = loadAnnotations(f"./Downloads/{t1_version_FileName}.txt")
 
     # Create No-Knowledge (NK) benchmark file
     nk_benchmark_data = {}
@@ -130,7 +130,7 @@ def create_cafa_benchmark(species):
         if protein_id not in t_minus_1_annotations:
             nk_benchmark_data[protein_id] = go_terms
     nk_benchmark_file = f'{species}_NK_benchmark.txt'
-    write_benchmark_file(nk_benchmark_file, nk_benchmark_data)
+    writeBenchmarkFile(nk_benchmark_file, nk_benchmark_data)
 
     # Create Limited-Knowledge (LK) benchmark file
     lk_benchmark_data = {}
@@ -138,12 +138,12 @@ def create_cafa_benchmark(species):
         if protein_id in t1_annotations and go_terms != t1_annotations[protein_id]:
             lk_benchmark_data[protein_id] = t1_annotations[protein_id] - go_terms
     lk_benchmark_file = f'{species}_LK_benchmark.txt'
-    write_benchmark_file(lk_benchmark_file, lk_benchmark_data)
+    writeBenchmarkFile(lk_benchmark_file, lk_benchmark_data)
 
     # Create target file
     target_proteins = set(nk_benchmark_data.keys()) | set(lk_benchmark_data.keys())
     target_file = f'{species}_target.fasta'
-    write_target_file(target_file, target_proteins)
+    writeTargetFile(target_file, target_proteins)
 
     print('Benchmark files created successfully.')
     print(f'Number of target proteins available for prediction: {len(target_proteins)}')
@@ -159,4 +159,4 @@ if speciesInput:
 print(f'Species selected: {species}')
 
 # Create CAFA-style benchmark
-create_cafa_benchmark(species)
+createCafaBenchmark(species)
