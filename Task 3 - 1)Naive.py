@@ -23,8 +23,8 @@ def naiveTextSearch(text, pattern):
 
     return matches
 
-text = "Hello, how are you? Hello, nice to meet you."
-pattern = "Hello"
+text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sodales, nibh ut laoreet congue, nulla eros tempus ante, quis mattis ipsum odio nec quam. Fusce et magna imperdiet, convallis libero nec, efficitur neque. Praesent porttitor, velit sit amet laoreet posuere, felis augue rhoncus quam, quis venenatis est tellus nec nulla. Nullam volutpat est ac lacus consequat pellentesque. Sed aliquam orci id bibendum ultrices. Nulla facilisis elit nec neque cursus rutrum. Nunc tincidunt ullamcorper cursus. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+pattern = "ipsum"
 
 matches = naiveTextSearch(text, pattern)
-print(matches)  # Output: [0, 19]
+print(matches)  # Output: [6, 134]
