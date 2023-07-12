@@ -1,3 +1,6 @@
+import pyperf
+import matplotlib.pyplot as plt
+
 def naiveTextSearch(text, pattern):
     """
     Perform a naive text search for exact matching.
@@ -23,8 +26,14 @@ def naiveTextSearch(text, pattern):
 
     return matches
 
-text = "Lorem dolor sit amet. ipsu"
-pattern = "ipsum"
+def benchmark_naiveTextSearch(loops):
+    text = "Lorem dolor sit amet."
+    pattern = "ipsum"
 
-matches = naiveTextSearch(text, pattern)
-print(matches)
+    for _ in range(loops):
+        naiveTextSearch(text, pattern)
+
+runner = pyperf.Runner()
+results = runner.bench_func('benchmark_naiveTextSearch', benchmark_naiveTextSearch, 10)
+
+results.dump('benchmark_naiveTextSearch.json',replace=True)
