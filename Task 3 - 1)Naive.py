@@ -1,3 +1,6 @@
+import argparse
+import sys
+
 def naiveTextSearch(text, pattern):
     """
     Perform a naive text search for exact matching.
@@ -23,8 +26,23 @@ def naiveTextSearch(text, pattern):
 
     return matches
 
-text = "Lorem dolor sit amet. ipsu"
-pattern = "ipsum"
+text = ""
+pattern = ""
+if sys.gettrace() is None:
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Naive Search')
+    parser.add_argument('pattern', help='The pattern that you want to search')
+    parser.add_argument('text', help='The text you want to search in')
+    args = parser.parse_args()
 
-matches = naiveTextSearch(text, pattern)
-print(matches)
+    text = args.text #"Lorem dolor sit amet. ipsu"
+    pattern = args.pattern # "ipsum"
+else:
+    text = "Lorem ipsum dolor sit amet"
+    pattern = "ipsum"
+
+try:
+    matches = naiveTextSearch(text, pattern)
+    print(matches)
+except:
+    print("An error has occured while doing the native text search")

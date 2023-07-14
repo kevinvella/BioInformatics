@@ -1,3 +1,6 @@
+import argparse
+import sys
+
 def load(file_path):
     sequences = []
     with open(file_path, 'r') as file:
@@ -73,35 +76,52 @@ def rank(scores):
     return ranked_sequences
 
 
-# Main execution
+# Example usage
 query_file = 'query.fa'
 target_file = 'target.fa'
 word_length = 3
+if sys.gettrace() is None:
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='MINI BLAST Arguments')
+    parser.add_argument('query', help='The query file you want to search in')
+    parser.add_argument('target', help='The target file you want to search in')
+    parser.add_argument('--wordlength', type=int, help='Word length. Default is 3')
+    args = parser.parse_args()
 
-# Load sequences
-query_sequence = load(query_file)[0]
-target_sequences = load(target_file)
+    query_file = args.query
+    target_file = args.target
+    
+    if args.wordlength is not None:
+        word_length = (args.wordlength)
 
-# Preprocess sequences
-query_sequence = preSequences([query_sequence])[0]
-target_sequences = preSequences(target_sequences)
+try:
+    # Load sequences
+    query_sequence = load(query_file)[0]
+    target_sequences = load(target_file)
 
-# Create word index
-word_index = createWordIndex(target_sequences, word_length)
+    # Preprocess sequences
+    query_sequence = preSequences([query_sequence])[0]
+    target_sequences = preSequences(target_sequences)
 
-# Extract query words
-query_words = extractWords(query_sequence, word_length)
+    # Create word index
+    word_index = createWordIndex(target_sequences, word_length)
 
-# Match query words with target sequences
-matching_sequences = matchWords(query_words, word_index)
+    # Extract query words
+    query_words = extractWords(query_sequence, word_length)
 
-# Score sequences based on word matches
-scores = scoreSequences(matching_sequences, word_index, query_words)
+    # Match query words with target sequences
+    matching_sequences = matchWords(query_words, word_index)
 
-# Rank sequences based on scores
-ranked_sequences = rank(scores)
+    # Score sequences based on word matches
+    scores = scoreSequences(matching_sequences, word_index, query_words)
 
-# Output the ranking
-print("Ranking of target sequences:")
-for sequence_id, score in ranked_sequences:
-    print(f"Sequence ID: {sequence_id}, Score: {score}")
+    # Rank sequences based on scores
+    ranked_sequences = rank(scores)
+
+    # Output the ranking
+    print("Ranking of target sequences:")
+    for sequence_id, score in ranked_sequences:
+        print(f"Sequence ID: {sequence_id}, Score: {score}")
+except Exception as e:
+    print("An error has occured while doing the BLAST search")
+    print(e)

@@ -1,3 +1,6 @@
+import argparse
+import sys
+
 def bad_character_table(pattern):
     table = {}
     for i in range(len(pattern)):
@@ -29,7 +32,7 @@ def good_suffix_table(pattern):
     return table
 
 
-def boyer_moore(text, pattern, n):
+def boyerMoore(text, pattern, n):
     m = len(pattern)
     bc_table = bad_character_table(pattern)
     gs_table = good_suffix_table(pattern)
@@ -64,13 +67,34 @@ def boyer_moore(text, pattern, n):
 
 
 # Example usage
-text = "ABACADABACABA"
-pattern = "DAB"
+text = ""
+pattern = ""
 mismatches = 1
-matches = boyer_moore(text, pattern, mismatches)
-if matches:
-    print(f"Pattern found at indices: {matches}")
-    for match in matches:
-        print(f"Matched substring: {text[match:match + len(pattern)]}")
+if sys.gettrace() is None:
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Good Bad Suffix Search')
+    parser.add_argument('pattern', help='The pattern that you want to search')
+    parser.add_argument('text', help='The text you want to search in')
+    parser.add_argument('--mismatches', type=int, help='Threshold for mismatches. Default is 1')
+    args = parser.parse_args()
+
+    text = args.text #"Lorem dolor sit amet. ipsu"
+    pattern = args.pattern # "ipsum"
+    
+    if args.mismatches is not None:
+        mismatches = (args.mismatches)
 else:
-    print("Pattern not found")
+    text = "ABACADABACABA"
+    pattern = "DABA"
+
+
+try:
+    result = boyerMoore(text, pattern, mismatches)
+    if len(result) > 0:
+        print(f"Pattern found at index {result}")
+        print(f"Matched substring: {text[result:result+len(pattern)]}")
+    else:
+        print("Pattern not found")
+except Exception as e:
+    print("An error has occured while doing the pigeon hole search")
+    print(e)

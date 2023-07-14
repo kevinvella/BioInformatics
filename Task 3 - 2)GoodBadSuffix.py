@@ -1,3 +1,6 @@
+import argparse
+import sys
+
 def bad_character_table(pattern):
     table = {}
     for i in range(len(pattern)):
@@ -29,7 +32,7 @@ def good_suffix_table(pattern):
     return table
 
 
-def boyer_moore(text, pattern):
+def boyerMoore(text, pattern):
     m = len(pattern)
     n = len(text)
     bc_table = bad_character_table(pattern)
@@ -57,12 +60,28 @@ def boyer_moore(text, pattern):
     return -1
 
 
-# Example usage
-text = "ABACADABACABA"
-pattern = "DABA"
-result = boyer_moore(text, pattern)
-if result != -1:
-    print(f"Pattern found at index {result}")
-    print(f"Matched substring: {text[result:result+len(pattern)]}")
+text = ""
+pattern = ""
+if sys.gettrace() is None:
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Good Bad Suffix Search')
+    parser.add_argument('pattern', help='The pattern that you want to search')
+    parser.add_argument('text', help='The text you want to search in')
+    args = parser.parse_args()
+
+    text = args.text #"Lorem dolor sit amet. ipsu"
+    pattern = args.pattern # "ipsum"
 else:
-    print("Pattern not found")
+    text = "ABACADABACABA"
+    pattern = "DABA"
+
+
+try:
+    result = boyerMoore(text, pattern)
+    if result != -1:
+        print(f"Pattern found at index {result}")
+        print(f"Matched substring: {text[result:result+len(pattern)]}")
+    else:
+        print("Pattern not found")
+except:
+    print("An error has occured while doing the native text search")

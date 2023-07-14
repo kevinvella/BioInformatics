@@ -24,7 +24,7 @@ def getProteinForSpecies(baseUrl, species) -> dict:
     response = urllib.request.urlopen(fullUrl)
     html = response.read().decode('utf-8')
 
-    regex_pattern = r'^goa_fly\.gaf\.\d+\.gz$'
+    regex_pattern = r'^goa_\.gaf\.\d+\.gz$'
 
     # Parse the HTML to extract file names and last modified dates
     file_lines = html.splitlines()
@@ -192,13 +192,17 @@ def createCafaBenchmark(species):
     print(f'Number of No-Knowledge (NK) proteins: {len(nk_benchmark_data)}')
     print(f'Number of Limited-Knowledge (LK) proteins: {len(lk_benchmark_data)}')
 
-# Ask the user to enter the UniProtGOA version and Fly species
-species = 'FLY'
-speciesInput = input('Enter the Species to use (Leave empty for default - FLY): ')
-if speciesInput:
-    species = speciesInput
+try:
+    # Ask the user to enter the UniProtGOA version and Fly species
+    species = 'FLY'
+    speciesInput = input('Enter the Species to use (Leave empty for default - FLY): ')
+    if speciesInput:
+        species = speciesInput
 
-print(f'Species selected: {species}')
+    print(f'Species selected: {species}')
 
-# Create CAFA-style benchmark
-createCafaBenchmark(species)
+    # Create CAFA-style benchmark
+    createCafaBenchmark(species)
+except Exception as e:
+    print("An error occured during the execution of the task")
+    print(e)
