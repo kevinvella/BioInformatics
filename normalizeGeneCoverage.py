@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import sys
 
-def calculate_rpm(counts, total_reads):
+def calculateRPM(counts, total_reads):
     return (counts / total_reads) * 1e6
 
-def calculate_rpkm(counts, gene_length, total_reads):
+def calculateRPKM(counts, gene_length, total_reads):
     return (counts / (gene_length / 1000.0 * total_reads)) * 1e9
 
-def read_gene_lengths(annotation_file):
+def readGeneLengths(annotation_file):
     gene_lengths = {}
 
     with open(annotation_file, 'r') as file:
@@ -42,13 +42,13 @@ def main():
     normalized_file = coverage_file.replace('.txt', '_normalized.txt')
 
     # Read the gene lengths from the annotation file
-    gene_lengths = read_gene_lengths(annotation_file)
+    gene_lengths = readGeneLengths(annotation_file)
 
     with open(normalized_file, 'w') as file:
         for gene, counts in gene_counts.items():
-            rpm = calculate_rpm(counts, total_reads)
+            rpm = calculateRPM(counts, total_reads)
             gene_length = gene_lengths.get(gene, 0)
-            rpkm = calculate_rpkm(counts, gene_length, total_reads)
+            rpkm = calculateRPKM(counts, gene_length, total_reads)
 
             file.write(f"{gene}\t{counts}\t{rpm}\t{rpkm}\n")
 

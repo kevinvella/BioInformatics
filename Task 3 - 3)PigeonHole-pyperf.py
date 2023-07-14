@@ -1,3 +1,6 @@
+import pyperf
+import matplotlib.pyplot as plt
+
 def bad_character_table(pattern):
     table = {}
     for i in range(len(pattern)):
@@ -62,15 +65,17 @@ def boyer_moore(text, pattern, n):
 
     return matches
 
+def benchmark_naiveTextSearch(loops):
 
-# Example usage
-text = "ABACADABACABA"
-pattern = "DAB"
-mismatches = 1
-matches = boyer_moore(text, pattern, mismatches)
-if matches:
-    print(f"Pattern found at indices: {matches}")
-    for match in matches:
-        print(f"Matched substring: {text[match:match + len(pattern)]}")
-else:
-    print("Pattern not found")
+    for _ in range(loops):
+        # Main execution
+        # Example usage
+        text = "ABACADABACABA"
+        pattern = "DAB"
+        mismatches = 1
+        boyer_moore(text, pattern, mismatches)
+
+runner = pyperf.Runner()
+results = runner.bench_func('benchmark_pigeonHoleTextSearch', benchmark_naiveTextSearch, 10)
+
+results.dump('benchmark_pigeonHoleTextSearch.json',replace=True)
