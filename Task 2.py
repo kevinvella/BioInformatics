@@ -7,7 +7,16 @@ import re
 import gzip
 
 def getProteinForSpecies(baseUrl, species) -> dict:
-    
+    """
+    Gets the protein sequence for the species
+
+    Args:
+        baseUrl (str): The base url for the resource.
+        species (str): The species.
+
+    Returns:
+        dict: A dictionary containg the last modiefied date and the filename as a key. The value associated with it is the full url
+    """
     fullUrl = f"{baseUrl}/{species}/"
     versions = dict()
 
@@ -41,15 +50,48 @@ def getProteinForSpecies(baseUrl, species) -> dict:
 
     return newVersionDict
 
-def downloadFile(url, destination, fileName):
-    save_path = os.path.join(destination, fileName)
-    urllib.request.urlretrieve(url, save_path)
+def downloadAndSaveFile(url, destination, fileName) -> bool:
+    """
+    Helper function to download the file from the specified url
+
+    Args:
+        url (str): The base url for the resource.
+        destination (str): The species.
+        fileName: The filename
+
+    Returns:
+        bool: Returns true if file is downloaded and saved. Else return false
+    """
+    try:
+        save_path = os.path.join(destination, fileName)
+        urllib.request.urlretrieve(url, save_path)
+
+        return True
+    except:
+        print("An exception occurred during downloading and saving of file")
+        return False
 
 def extractGZFile(inputFile, outputFile):
+    """
+    Helper function to extract a gz file
 
-    with gzip.open(inputFile, 'rb') as gz_file:
-        with open(outputFile, 'wb') as out_file:
-            out_file.write(gz_file.read())
+    Args:
+        inputFile (str): The base url for the resource.
+        outputFile (str): The species.
+
+    Returns:
+        bool: Returns true if file is extracted. Else return false
+    """
+    try:
+        with gzip.open(inputFile, 'rb') as gz_file:
+            with open(outputFile, 'wb') as out_file:
+                out_file.write(gz_file.read())
+
+        return True
+    except:
+        print("An exception occurred during extraction of gz file")
+        return False
+    
 
 def loadAnnotations(file_path): 
     annotations = defaultdict(set)
@@ -95,7 +137,7 @@ def createCafaBenchmark(species):
     t_minus_1_version_Url = versionsDict[versionsList[t_minus_1_index]]
     t_minus_1_version_FileName = versionsList[t_minus_1_index]
 
-    downloadFile(t_minus_1_version_Url, './Downloads', t_minus_1_version_FileName)
+    downloadAndSaveFile(t_minus_1_version_Url, './Downloads', t_minus_1_version_FileName)
     extractGZFile(inputFile=f'./Downloads/{t_minus_1_version_FileName}', outputFile=f'./Downloads/{t_minus_1_version_FileName}.txt')
 
     # Ask the user to select the t1 version
@@ -116,7 +158,7 @@ def createCafaBenchmark(species):
         if t1_version < six_months_later_version:
             print('Warning: The duration between t-1 and t1 versions is less than 6 months.')
 
-    downloadFile(t1_version_Url, './Downloads', t1_version_FileName)
+    downloadAndSaveFile(t1_version_Url, './Downloads', t1_version_FileName)
     extractGZFile(inputFile=f'./Downloads/{t1_version_FileName}', outputFile=f'./Downloads/{t1_version_FileName}.txt')
 
 

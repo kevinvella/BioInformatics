@@ -1,4 +1,4 @@
-def load_sequences(file_path):
+def load(file_path):
     sequences = []
     with open(file_path, 'r') as file:
         sequence = ''
@@ -14,7 +14,7 @@ def load_sequences(file_path):
     return sequences
 
 
-def preprocess_sequences(sequences):
+def preSequences(sequences):
     preprocessed_sequences = []
     for sequence in sequences:
         # Remove any unwanted characters, convert to uppercase, etc.
@@ -23,7 +23,7 @@ def preprocess_sequences(sequences):
     return preprocessed_sequences
 
 
-def create_word_index(sequences, word_length):
+def createWordIndex(sequences, word_length):
     word_index = {}
     for i, sequence in enumerate(sequences):
         for j in range(len(sequence) - word_length + 1):
@@ -35,14 +35,14 @@ def create_word_index(sequences, word_length):
     return word_index
 
 
-def extract_query_words(query_sequence, word_length):
+def extractWords(query_sequence, word_length):
     query_words = []
     for i in range(len(query_sequence) - word_length + 1):
         query_words.append(query_sequence[i:i+word_length])
     return query_words
 
 
-def match_query_words(query_words, word_index):
+def matchWords(query_words, word_index):
     matching_sequences = set()
     for word in query_words:
         if word in word_index:
@@ -50,7 +50,7 @@ def match_query_words(query_words, word_index):
     return matching_sequences
 
 
-def score_sequences(matching_sequences, word_index, query_words):
+def scoreSequences(matching_sequences, word_index, query_words):
     scores = {}
     for sequence_id in matching_sequences:
         sequence_matches = []
@@ -68,7 +68,7 @@ def score_sequences(matching_sequences, word_index, query_words):
 
 
 
-def rank_sequences(scores):
+def rank(scores):
     ranked_sequences = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return ranked_sequences
 
@@ -79,27 +79,27 @@ target_file = 'target.fa'
 word_length = 3
 
 # Load sequences
-query_sequence = load_sequences(query_file)[0]
-target_sequences = load_sequences(target_file)
+query_sequence = load(query_file)[0]
+target_sequences = load(target_file)
 
 # Preprocess sequences
-query_sequence = preprocess_sequences([query_sequence])[0]
-target_sequences = preprocess_sequences(target_sequences)
+query_sequence = preSequences([query_sequence])[0]
+target_sequences = preSequences(target_sequences)
 
 # Create word index
-word_index = create_word_index(target_sequences, word_length)
+word_index = createWordIndex(target_sequences, word_length)
 
 # Extract query words
-query_words = extract_query_words(query_sequence, word_length)
+query_words = extractWords(query_sequence, word_length)
 
 # Match query words with target sequences
-matching_sequences = match_query_words(query_words, word_index)
+matching_sequences = matchWords(query_words, word_index)
 
 # Score sequences based on word matches
-scores = score_sequences(matching_sequences, word_index, query_words)
+scores = scoreSequences(matching_sequences, word_index, query_words)
 
 # Rank sequences based on scores
-ranked_sequences = rank_sequences(scores)
+ranked_sequences = rank(scores)
 
 # Output the ranking
 print("Ranking of target sequences:")
