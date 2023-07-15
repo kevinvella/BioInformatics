@@ -34,33 +34,33 @@ def goodSuffixTable(pattern):
 
 def boyerMoore(text, pattern, n):
     m = len(pattern)
-    bc_table = badCharacterTable(pattern)
-    gs_table = goodSuffixTable(pattern)
+    bcTable = badCharacterTable(pattern)
+    gsTable = goodSuffixTable(pattern)
     i = 0
 
     matches = []
     while i <= n - m:
         j = m - 1
-        mismatch_count = 0
+        mismatchCount = 0
         while j >= 0 and pattern[j] == text[i + j]:
             j -= 1
 
         if j == -1:
             # Match found
             matches.append(i)
-            i += gs_table[0]
+            i += gsTable[0]
         else:
-            if text[i + j] in bc_table:
-                bc_offset = bc_table[text[i + j]]
+            if text[i + j] in bcTable:
+                bcOffset = bcTable[text[i + j]]
             else:
-                bc_offset = -1
+                bcOffset = -1
 
-            gs_offset = gs_table[j + 1]
+            gsOffset = gsTable[j + 1]
 
-            i += max(gs_offset, j - bc_offset)
+            i += max(gsOffset, j - bcOffset)
 
-        mismatch_count += 1
-        if mismatch_count > n:
+        mismatchCount += 1
+        if mismatchCount > n:
             break
 
     return matches

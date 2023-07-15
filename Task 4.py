@@ -18,54 +18,54 @@ def load(file_path):
 
 
 def preSequences(sequences):
-    preprocessed_sequences = []
+    preprocessedSequences = []
     for sequence in sequences:
         # Remove any unwanted characters, convert to uppercase, etc.
-        preprocessed_sequence = sequence.upper()
-        preprocessed_sequences.append(preprocessed_sequence)
-    return preprocessed_sequences
+        preprocessedSequence = sequence.upper()
+        preprocessedSequences.append(preprocessedSequence)
+    return preprocessedSequences
 
 
-def createWordIndex(sequences, word_length):
-    word_index = {}
+def createWordIndex(sequences, wordLength):
+    wordIndex = {}
     for i, sequence in enumerate(sequences):
-        for j in range(len(sequence) - word_length + 1):
-            word = sequence[j:j+word_length]
-            if word in word_index:
-                word_index[word].append((i, j))
+        for j in range(len(sequence) - wordLength + 1):
+            word = sequence[j:j+wordLength]
+            if word in wordIndex:
+                wordIndex[word].append((i, j))
             else:
-                word_index[word] = [(i, j)]
-    return word_index
+                wordIndex[word] = [(i, j)]
+    return wordIndex
 
 
-def extractWords(query_sequence, word_length):
+def extractWords(querySequence, wordLength):
     query_words = []
-    for i in range(len(query_sequence) - word_length + 1):
-        query_words.append(query_sequence[i:i+word_length])
+    for i in range(len(querySequence) - wordLength + 1):
+        query_words.append(querySequence[i:i+wordLength])
     return query_words
 
 
-def matchWords(query_words, word_index):
-    matching_sequences = set()
-    for word in query_words:
-        if word in word_index:
-            matching_sequences.update([match[0] for match in word_index[word] if match[0] not in matching_sequences])
-    return matching_sequences
+def matchWords(queryWords, wordIndex):
+    matchingSequences = set()
+    for word in queryWords:
+        if word in wordIndex:
+            matchingSequences.update([match[0] for match in wordIndex[word] if match[0] not in matchingSequences])
+    return matchingSequences
 
 
-def scoreSequences(matching_sequences, word_index, query_words):
+def scoreSequences(matchingSequences, wordIndex, queryWords):
     scores = {}
-    for sequence_id in matching_sequences:
-        sequence_matches = []
-        for word in query_words:
-            if word in word_index:
-                sequence_matches.extend([match[1] for match in word_index[word] if match[0] == sequence_id])
+    for sequenceId in matchingSequences:
+        sequenceMatches = []
+        for word in queryWords:
+            if word in wordIndex:
+                sequenceMatches.extend([match[1] for match in wordIndex[word] if match[0] == sequenceId])
         score = 0
-        for query_match in query_words:
-            for sequence_match in sequence_matches:
-                if sequence_match <= sequence_match + len(query_match):
+        for queryMatch in queryWords:
+            for sequenceMatch in sequenceMatches:
+                if sequenceMatch <= sequenceMatch + len(queryMatch):
                     score += 1
-        scores[sequence_id] = score
+        scores[sequenceId] = score
     return scores
 
 
@@ -76,10 +76,9 @@ def rank(scores):
     return ranked_sequences
 
 
-# Example usage
 query_file = 'query.fa'
 target_file = 'target.fa'
-word_length = 3
+wordLength = 3
 if sys.gettrace() is None:
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='MINI BLAST Arguments')
@@ -92,36 +91,37 @@ if sys.gettrace() is None:
     target_file = args.target
     
     if args.wordlength is not None:
-        word_length = (args.wordlength)
+        wordLength = (args.wordlength)
 
 try:
     # Load sequences
-    query_sequence = load(query_file)[0]
+    querySequence = load(query_file)[0]
     target_sequences = load(target_file)
 
     # Preprocess sequences
-    query_sequence = preSequences([query_sequence])[0]
+    querySequence = preSequences([querySequence])[0]
     target_sequences = preSequences(target_sequences)
 
     # Create word index
-    word_index = createWordIndex(target_sequences, word_length)
+    wordIndex = createWordIndex(target_sequences, wordLength)
 
     # Extract query words
-    query_words = extractWords(query_sequence, word_length)
+    queryWords = extractWords(querySequence, wordLength)
 
     # Match query words with target sequences
-    matching_sequences = matchWords(query_words, word_index)
+    matchingSequences = matchWords(queryWords, wordIndex)
 
     # Score sequences based on word matches
-    scores = scoreSequences(matching_sequences, word_index, query_words)
+    scores = scoreSequences(matchingSequences, wordIndex, queryWords)
 
     # Rank sequences based on scores
-    ranked_sequences = rank(scores)
+    rankedSequences = rank(scores)
 
     # Output the ranking
     print("Ranking of target sequences:")
-    for sequence_id, score in ranked_sequences:
-        print(f"Sequence ID: {sequence_id}, Score: {score}")
+    for sequenceId, score in rankedSequences:
+        print(f"Sequence ID: {sequenceId}, Score: {score}")
+
 except Exception as e:
     print("An error has occured while doing the BLAST search")
     print(e)
