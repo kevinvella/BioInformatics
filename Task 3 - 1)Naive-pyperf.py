@@ -26,7 +26,7 @@ def naiveTextSearch(text, pattern):
 
     return matches
 
-def benchmark_naiveTextSearch(loops):
+def benchmarkNaiveTextSearch(loops):
     text = "Lorem dolor sit amet."
     pattern = "ipsum"
 
@@ -34,6 +34,6 @@ def benchmark_naiveTextSearch(loops):
         naiveTextSearch(text, pattern)
 
 runner = pyperf.Runner()
-results = runner.bench_func('benchmark_naiveTextSearch', benchmark_naiveTextSearch, 10)
+results = runner.bench_func('benchmark_naiveTextSearch', benchmarkNaiveTextSearch, 10)
 
 results.dump('benchmark_naiveTextSearch.json',replace=True)

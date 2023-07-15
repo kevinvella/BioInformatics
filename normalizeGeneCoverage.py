@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import argparse
 
 def calculateRPM(counts, total_reads):
     return (counts / total_reads) * 1e6
@@ -20,39 +21,50 @@ def readGeneLengths(annotation_file):
     return gene_lengths
 
 def main():
-    # Read the gene coverage file
-    coverage_file = sys.argv[1]
-    annotation_file = sys.argv[2] #'annotation.bed'
-    gene_counts = {}
-    total_reads = 0
 
-    with open(coverage_file, 'r') as file:
-        for line in file:
-            gene_data = line.strip().split('\t')
-            gene = gene_data[3]
+    try:
+        parser = argparse.ArgumentParser(description='RNA-seq pipeline')
+        parser.add_argument('coverage_file', help='Coverage file')
+        parser.add_argument('annotation_file', help='Annotation file')
 
-            strCounts = gene_data[11].split(',')
-            strCounts = [i for i in strCounts if i]
+        args = parser.parse_args()
 
-            counts = sum(map(int, strCounts))
-            gene_counts[gene] = counts
-            total_reads += counts
+        # Read the gene coverage file
+        coverage_file = args.coverage_file
+        annotation_file = args.annotation_file  #'annotation.bed'
+        gene_counts = {}
+        total_reads = 0
 
-    # Normalize gene coverage using RPM and RPKM
-    normalized_file = coverage_file.replace('.txt', '_normalized.txt')
+        with open(coverage_file, 'r') as file:
+            for line in file:
+                gene_data = line.strip().split('\t')
+                gene = gene_data[3]
 
-    # Read the gene lengths from the annotation file
-    gene_lengths = readGeneLengths(annotation_file)
+                strCounts = gene_data[11].split(',')
+                strCounts = [i for i in strCounts if i]
 
-    with open(normalized_file, 'w') as file:
-        for gene, counts in gene_counts.items():
-            rpm = calculateRPM(counts, total_reads)
-            gene_length = gene_lengths.get(gene, 0)
-            rpkm = calculateRPKM(counts, gene_length, total_reads)
+                counts = sum(map(int, strCounts))
+                gene_counts[gene] = counts
+                total_reads += counts
 
-            file.write(f"{gene}\t{counts}\t{rpm}\t{rpkm}\n")
+        # Normalize gene coverage using RPM and RPKM
+        normalized_file = coverage_file.replace('.txt', '_normalized.txt')
 
-    print(f"Normalized gene coverage saved to {normalized_file}.")
+        # Read the gene lengths from the annotation file
+        gene_lengths = readGeneLengths(annotation_file)
+
+        with open(normalized_file, 'w') as file:
+            for gene, counts in gene_counts.items():
+                rpm = calculateRPM(counts, total_reads)
+                gene_length = gene_lengths.get(gene, 0)
+                rpkm = calculateRPKM(counts, gene_length, total_reads)
+
+                file.write(f"{gene}\t{counts}\t{rpm}\t{rpkm}\n")
+
+        print(f"Normalized gene coverage saved to {normalized_file}.")
+    except Exception as e:
+        print("Error while executing gene normilization")
+        print(e)
 
 if __name__ == "__main__":
     main()

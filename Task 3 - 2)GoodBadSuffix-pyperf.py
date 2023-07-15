@@ -1,14 +1,14 @@
 import pyperf
 import matplotlib.pyplot as plt
 
-def bad_character_table(pattern):
+def badCharacterTable(pattern):
     table = {}
     for i in range(len(pattern)):
         table[pattern[i]] = i
     return table
 
 
-def good_suffix_table(pattern):
+def goodSuffixTable(pattern):
     m = len(pattern)
     table = [0] * (m + 1)
     suffix = [0] * (m + 1)
@@ -32,11 +32,11 @@ def good_suffix_table(pattern):
     return table
 
 
-def boyer_moore(text, pattern):
+def boyerMoore(text, pattern):
     m = len(pattern)
     n = len(text)
-    bc_table = bad_character_table(pattern)
-    gs_table = good_suffix_table(pattern)
+    bc_table = badCharacterTable(pattern)
+    gs_table = goodSuffixTable(pattern)
     i = 0
 
     while i <= n - m:
@@ -60,7 +60,7 @@ def boyer_moore(text, pattern):
     return -1
 
 
-def benchmark_naiveTextSearch(loops):
+def benchmarkGoodBadSuffixTextSearch(loops):
     text = "Lorem dolor sit amet."
     pattern = "ipsum"
 
@@ -68,9 +68,9 @@ def benchmark_naiveTextSearch(loops):
         # Main execution
         text = "ABACADABACABA"
         pattern = "DABA"
-        boyer_moore(text, pattern)
+        boyerMoore(text, pattern)
 
 runner = pyperf.Runner()
-results = runner.bench_func('benchmark_goodBadSuffixTextSearch', benchmark_naiveTextSearch, 10)
+results = runner.bench_func('benchmark_goodBadSuffixTextSearch', benchmarkGoodBadSuffixTextSearch, 10)
 
 results.dump('benchmark_goodBadSuffixTextSearch.json',replace=True)

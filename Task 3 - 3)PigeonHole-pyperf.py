@@ -1,14 +1,14 @@
 import pyperf
 import matplotlib.pyplot as plt
 
-def bad_character_table(pattern):
+def badCharacterTable(pattern):
     table = {}
     for i in range(len(pattern)):
         table[pattern[i]] = i
     return table
 
 
-def good_suffix_table(pattern):
+def goodSuffixTable(pattern):
     m = len(pattern)
     table = [0] * (m + 1)
     suffix = [0] * (m + 1)
@@ -32,10 +32,10 @@ def good_suffix_table(pattern):
     return table
 
 
-def boyer_moore(text, pattern, n):
+def boyerMoore(text, pattern, n):
     m = len(pattern)
-    bc_table = bad_character_table(pattern)
-    gs_table = good_suffix_table(pattern)
+    bc_table = badCharacterTable(pattern)
+    gs_table = goodSuffixTable(pattern)
     i = 0
 
     matches = []
@@ -65,7 +65,7 @@ def boyer_moore(text, pattern, n):
 
     return matches
 
-def benchmark_naiveTextSearch(loops):
+def benchmarkPigeonHoleTextSearch(loops):
 
     for _ in range(loops):
         # Main execution
@@ -73,9 +73,9 @@ def benchmark_naiveTextSearch(loops):
         text = "ABACADABACABA"
         pattern = "DAB"
         mismatches = 1
-        boyer_moore(text, pattern, mismatches)
+        boyerMoore(text, pattern, mismatches)
 
 runner = pyperf.Runner()
-results = runner.bench_func('benchmark_pigeonHoleTextSearch', benchmark_naiveTextSearch, 10)
+results = runner.bench_func('benchmark_pigeonHoleTextSearch', benchmarkPigeonHoleTextSearch, 10)
 
 results.dump('benchmark_pigeonHoleTextSearch.json',replace=True)

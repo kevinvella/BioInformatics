@@ -1,14 +1,14 @@
 import argparse
 import sys
 
-def bad_character_table(pattern):
+def badCharacterTable(pattern):
     table = {}
     for i in range(len(pattern)):
         table[pattern[i]] = i
     return table
 
 
-def good_suffix_table(pattern):
+def goodSuffixTable(pattern):
     m = len(pattern)
     table = [0] * (m + 1)
     suffix = [0] * (m + 1)
@@ -34,8 +34,8 @@ def good_suffix_table(pattern):
 
 def boyerMoore(text, pattern, n):
     m = len(pattern)
-    bc_table = bad_character_table(pattern)
-    gs_table = good_suffix_table(pattern)
+    bc_table = badCharacterTable(pattern)
+    gs_table = goodSuffixTable(pattern)
     i = 0
 
     matches = []
@@ -66,7 +66,6 @@ def boyerMoore(text, pattern, n):
     return matches
 
 
-# Example usage
 text = ""
 pattern = ""
 mismatches = 1
