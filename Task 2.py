@@ -6,6 +6,14 @@ from bioservices import UniProt
 import re
 import gzip
 
+
+def checkAndCreateDirectoy(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except Exception as e:
+        print("Failed while trying to create directory")
+
 def getProteinForSpecies(baseUrl, species) -> dict:
     """
     Gets the protein sequence for the species
@@ -24,7 +32,7 @@ def getProteinForSpecies(baseUrl, species) -> dict:
     response = urllib.request.urlopen(fullUrl)
     html = response.read().decode('utf-8')
 
-    regex_pattern = r'^goa_\.gaf\.\d+\.gz$'
+    regex_pattern = fr'^goa_{species.lower()}\.gaf\.\d+\.gz$'
 
     # Parse the HTML to extract file names and last modified dates
     file_lines = html.splitlines()
@@ -125,6 +133,9 @@ def writeTargetFile(file_path, target_proteins):
 
 def createCafaBenchmark(species):
     baseUrl = 'https://ftp.ebi.ac.uk/pub/databases/GO/goa/old'
+
+    #Check if the downloads directory exists
+    checkAndCreateDirectoy('./Downloads/')
 
     # Ask the user to select the t-1 version
     print(f'Available versions for {species}:')
